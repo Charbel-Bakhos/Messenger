@@ -3,10 +3,10 @@ import threading
 import argparse
 import os
 
-"""Server class will inherit from the threading method to create a thread"""
+#Server class will inherit from the threading method to create a thread
 class Server(threading.Thread):
 
-    """On initialisation, get the host IP and port and create a list to store connections."""
+    #On initialisation, get the host IP and port and create a list to store connections.
     def __init__(self, host, port):
         super().__init__()
         self.host = host
@@ -33,13 +33,17 @@ class Server(threading.Thread):
             self.connection.append(server_socket)
             print("Ready to receive messages from", client_sock.getpeername())
     
-    """Create functionality to send messages to all clients that are connected to the server"""
+    #Create functionality to send messages to all clients that are connected to the server
     def send_message(self, msg, source):
         for connections in self.connection:
             if connections.sockname != source:
                 connections.send(msg)
+    
+    #Remove a user who has quit their client
+    def remove_connection(self, connections):
+        self.connection.remove(connections)
 
-
+#ServerSocket class will communicate with the clients
 class ServerSock(threading.Thread):
 
     def __init__(self, client_sock, sockname, server):
@@ -48,6 +52,8 @@ class ServerSock(threading.Thread):
         self.sockname = sockname
         self.server = server
     
+    """Run method will recieve the data from the client and decode to ascii format. It will then use
+    the send_message method from Server class to relay the message to all clients in the connection list."""
     def run(self):
         while True:
             msg = self.client_sock.recv(1024).decode("ascii")
@@ -64,7 +70,7 @@ class ServerSock(threading.Thread):
     def send(self, msg):
         self.client_sock.sendall(msg.encode("ascii"))
     
-
+#Allows server to shut down the chat
 def exit(server):
     while True:
         ipt = input("")
@@ -75,6 +81,7 @@ def exit(server):
             print("Shutting down the server...")
             os._exit(0)
 
+#Get the host IP address from terminal and pass to Server class
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Chatroom Server')
     parser.add_argument('host', help='Interface the server listens at')
